@@ -8,6 +8,10 @@ const cors = require('cors');
 
 //importing mongooes to work with mongodb
 const mongoose = require('mongoose');
+
+//import nodemailer email service
+const nodemailer = require('nodemailer');
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 //making router instance from express
 const appRoutes = express.Router();
 
@@ -57,11 +61,13 @@ appRoutes.route('/add').post(function(req,res){
 
     let details= new DialogDetails(req.body);
     details.save()
-        .then(todo=>{
-            res.status(200).json({'details':'Payment Details added successfully'});
+        .then(details=>{
+            emailnotification(details);
+            res.status(200).json({isAdd:true});
         })
         .catch(err=>{
-            res.status(400).send('adding new Payment Details failed');
+            console.log(err);
+            res.status(400).json({isAdd:false});
         });
 
 });
@@ -74,3 +80,33 @@ app.use('/api/dialogPayment',appRoutes);
 app.listen(PORT,function(){
     console.log("Server is running on PORT: "+PORT);
 });
+
+function emailnotification(detail){
+
+    var output=`<b>Payment Recived</b>
+                <p>Dear Sir/Madam, We recieved your payment of ${detail.total} LKR. 
+                Thank you for using Dialog Payments.</p>`; 
+
+
+    let transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+            user: 'railwayticket0000@gmail.com',
+            pass: 'ams@1996'
+        }
+    });
+    let mailOptions = {
+        from: 'railwayticket0000@gmail.com <Dialog Payments>',
+        to:detail.email,
+        subject: 'Ticket Confirmation',
+        html: output
+    };
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return console.log(error);
+        }
+        console.log('Message %s sent: %s', info.messageId, info.response);
+    });
+}

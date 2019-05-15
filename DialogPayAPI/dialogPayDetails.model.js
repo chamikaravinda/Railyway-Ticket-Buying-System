@@ -14,6 +14,18 @@ let DialogPayDetails = new Schema({
 
     date:{
         type : String
+    },
+
+    total:{
+        type : Number
+    },
+
+    num_of_ticket:{
+        type : String
+    },
+    
+    email:{
+        type : String
     }
 });
 
